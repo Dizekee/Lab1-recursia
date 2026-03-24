@@ -3,96 +3,36 @@
 #include <QtWidgets>
 #include <vector>
 #include <sstream>
-#include <QElapsedTimer>          // для замера времени
+#include <QElapsedTimer>
+#include <QRegularExpression>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
+    , ui(new Ui::MainWindow)
 {
-    QWidget *centralWidget = new QWidget(this);
-    setCentralWidget(centralWidget);
+    ui->setupUi(this);
 
-    QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
+    ui->variantCombo->addItem("Вариант 10", 10);
+    ui->variantCombo->addItem("Вариант 3", 3);
+    updateFormula(ui->variantCombo->currentData().toInt());
 
-    // --- Existing part: recursive function calculator ---
-    nEdit = new QLineEdit(this);
-    nEdit->setPlaceholderText("Введите n (целое положительное)");
-    mainLayout->addWidget(nEdit);
-
-    variantCombo = new QComboBox(this);
-    variantCombo->addItem("Вариант 10", 10);
-    variantCombo->addItem("Вариант 3", 3);
-    mainLayout->addWidget(variantCombo);
-
-    calcButton = new QPushButton("Вычислить", this);
-    mainLayout->addWidget(calcButton);
-
-    resultLabel = new QLabel("Результат (рекурсивно): ", this);
-    mainLayout->addWidget(resultLabel);
-
-    callsLabel = new QLabel("Количество вызовов: ", this);
-    mainLayout->addWidget(callsLabel);
-
-    formulaLabel = new QLabel("Формула: ", this);
-    formulaLabel->setWordWrap(true);
-    mainLayout->addWidget(formulaLabel);
-
-    // Новые метки для времени и итеративного результата
-    recTimeLabel = new QLabel("Время рекурсивного вычисления: ", this);
-    mainLayout->addWidget(recTimeLabel);
-
-    iterResultLabel = new QLabel("Результат (итеративно): ", this);
-    mainLayout->addWidget(iterResultLabel);
-
-    iterTimeLabel = new QLabel("Время итеративного вычисления: ", this);
-    mainLayout->addWidget(iterTimeLabel);
-
-    // --- New part: variant 10 task (max in sequence) ---
-    QFrame *separator = new QFrame(this);
-    separator->setFrameShape(QFrame::HLine);
-    separator->setFrameShadow(QFrame::Sunken);
-    mainLayout->addWidget(separator);
-
-    QLabel *taskLabel = new QLabel("Задание по варианту 10:", this);
-    taskLabel->setStyleSheet("font-weight: bold; margin-top: 10px;");
-    mainLayout->addWidget(taskLabel);
-
-    QLabel *descLabel = new QLabel("Введите последовательность натуральных чисел, "
-                                   "завершающуюся нулём (ноль в конце не обязателен). "
-                                   "Программа найдёт максимальное число.", this);
-    descLabel->setWordWrap(true);
-    mainLayout->addWidget(descLabel);
-
-    sequenceEdit = new QTextEdit(this);
-    sequenceEdit->setPlaceholderText("Пример:\n5\n12\n8\n0");
-    sequenceEdit->setMaximumHeight(100);
-    mainLayout->addWidget(sequenceEdit);
-
-    maxButton = new QPushButton("Найти максимум", this);
-    mainLayout->addWidget(maxButton);
-
-    maxResultLabel = new QLabel("Максимум: ", this);
-    mainLayout->addWidget(maxResultLabel);
-
-    // --- Connections ---
-    connect(calcButton, &QPushButton::clicked, this, &MainWindow::onCalculateClicked);
-    connect(variantCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+    connect(ui->calcButton, &QPushButton::clicked, this, &MainWindow::onCalculateClicked);
+    connect(ui->variantCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &MainWindow::onVariantChanged);
-    connect(maxButton, &QPushButton::clicked, this, &MainWindow::onMaxClicked);
-
-    updateFormula(variantCombo->currentData().toInt());
+    connect(ui->maxButton, &QPushButton::clicked, this, &MainWindow::onMaxClicked);
 
     setWindowTitle("Рекурсивный калькулятор + максимум последовательности");
-    resize(600, 550);
 }
 
 MainWindow::~MainWindow()
 {
+    delete ui;
 }
 
 void MainWindow::onVariantChanged(int index)
 {
     Q_UNUSED(index);
-    int variant = variantCombo->currentData().toInt();
+    int variant = ui->variantCombo->currentData().toInt();
     updateFormula(variant);
 }
 
@@ -104,28 +44,27 @@ void MainWindow::updateFormula(int variant)
                       "F(n) = n + 3 * F(n-1)  (если n четное)<br>"
                       "F(n) = 2 + 2 * F(n-2)  (если n > 1 нечетное)";
     } else if (variant == 3) {
-        formulaText = "F(n) = 1  (n < 3)<br>"
-                      "F(n) = F(n-1) + F(n-2)  (n > 2 и n нечетное)<br>"
-                      "F(n) = Σ_{i=1}^{n-1} F(i)  (n > 2 и n четное)";
+        formulaText = "F(n) = 1  (n &lt; 3)<br>"
+                      "F(n) = F(n-1) + F(n-2)  (n &gt; 2 и n нечетное)<br>"
+                      "F(n) = Σ_{i=1}^{n-1} F(i)  (n &gt; 2 и n четное)";
     } else {
         formulaText = "Неизвестный вариант";
     }
-    formulaLabel->setText(formulaText);
+    ui->formulaLabel->setText(formulaText);
 }
 
 void MainWindow::onCalculateClicked()
 {
     bool ok;
-    int n = nEdit->text().toInt(&ok);
+    int n = ui->nEdit->text().toInt(&ok);
     if (!ok || n < 1) {
         QMessageBox::warning(this, "Ошибка ввода", "Введите целое положительное число.");
         return;
     }
 
-    int variant = variantCombo->currentData().toInt();
+    int variant = ui->variantCombo->currentData().toInt();
 
-    // --- Рекурсивное вычисление с замером времени ---
-    resetCallCount();                       // обнуляем счётчик вызовов
+    resetCallCount();
     QElapsedTimer timerRec;
     timerRec.start();
     long long recResult = 0;
@@ -137,9 +76,8 @@ void MainWindow::onCalculateClicked()
         QMessageBox::critical(this, "Ошибка", "Неизвестный вариант");
         return;
     }
-    qint64 recTime = timerRec.nsecsElapsed();   // время в наносекундах
+    qint64 recTime = timerRec.nsecsElapsed();
 
-    // --- Итеративное вычисление с замером времени ---
     QElapsedTimer timerIter;
     timerIter.start();
     long long iterResult = 0;
@@ -150,24 +88,18 @@ void MainWindow::onCalculateClicked()
     }
     qint64 iterTime = timerIter.nsecsElapsed();
 
-    // Вывод результатов
-    resultLabel->setText(QString("Результат (рекурсивно): %1").arg(recResult));
-    callsLabel->setText(QString("Количество вызовов: %1").arg(getCallCount()));
-    recTimeLabel->setText(QString("Время рекурсивного вычисления: %1 мкс")
-                              .arg(recTime / 1000.0, 0, 'f', 3));  // микросекунды
+    ui->resultLabel->setText(QString("Результат вычислений: %1").arg(recResult));
+    ui->callsLabel->setText(QString("Количество вызовов: %1").arg(getCallCount()));
+    ui->recTimeLabel->setText(QString("Время рекурсивного вычисления: %1 мкс")
+                                  .arg(recTime / 1000.0, 0, 'f', 3));
+    ui->iterTimeLabel->setText(QString("Время итеративного вычисления: %1 мкс")
+                                   .arg(iterTime / 1000.0, 0, 'f', 3));
 
-    iterResultLabel->setText(QString("Результат (итеративно): %1").arg(iterResult));
-    iterTimeLabel->setText(QString("Время итеративного вычисления: %1 мкс")
-                               .arg(iterTime / 1000.0, 0, 'f', 3));
-
-    // Проверка совпадения результатов
     if (recResult != iterResult) {
         QMessageBox::warning(this, "Несовпадение",
                              "Рекурсивный и итеративный результаты отличаются!");
     }
 }
-
-// --- Итеративные реализации ---
 
 long long MainWindow::F10Iterative(int n)
 {
@@ -189,30 +121,27 @@ long long MainWindow::F3Iterative(int n)
     if (n < 3) return 1;
     std::vector<long long> f(n + 1);
     f[1] = 1;
-    f[2] = 1;                     // для n=2 сумма f[1] = 1
-    long long totalSum = f[1] + f[2]; // сумма f[1..2]
+    f[2] = 1;
+    long long totalSum = f[1] + f[2];
     for (int i = 3; i <= n; ++i) {
-        if (i % 2 == 1) {         // нечётное
+        if (i % 2 == 1) {
             f[i] = f[i - 1] + f[i - 2];
-        } else {                  // чётное
-            f[i] = totalSum;      // сумма f[1..i-1]
+        } else {
+            f[i] = totalSum;
         }
         totalSum += f[i];
     }
     return f[n];
 }
 
-// --- Задание по варианту 10 (максимум) ---
-
 void MainWindow::onMaxClicked()
 {
-    QString text = sequenceEdit->toPlainText().trimmed();
+    QString text = ui->sequenceEdit->toPlainText().trimmed();
     if (text.isEmpty()) {
         QMessageBox::warning(this, "Ошибка", "Введите последовательность чисел.");
         return;
     }
 
-    // Разбор чисел
     QStringList tokens = text.split(QRegularExpression("\\s+"), Qt::SkipEmptyParts);
     std::vector<int> numbers;
     bool hasZero = false;
@@ -236,7 +165,7 @@ void MainWindow::onMaxClicked()
     }
 
     int maxVal = maxRecursive(numbers);
-    maxResultLabel->setText(QString("Максимум: %1").arg(maxVal));
+    ui->maxResultLabel->setText(QString("Максимум: %1").arg(maxVal));
 }
 
 int MainWindow::maxRecursive(const std::vector<int>& nums)

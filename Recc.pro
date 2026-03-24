@@ -14,8 +14,8 @@ HEADERS += \
     mainwindow.h \
     recursion.h
 
-##FORMS += \
-##    mainwindow.ui
+FORMS += \
+    mainwindow.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

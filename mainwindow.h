@@ -3,12 +3,8 @@
 
 #include <QMainWindow>
 #include <vector>
-
-class QLineEdit;
-class QComboBox;
-class QPushButton;
-class QLabel;
-class QTextEdit;
+#include <QtWidgets>          // включает все виджеты
+#include "ui_mainwindow.h"
 
 class MainWindow : public QMainWindow
 {
@@ -26,26 +22,10 @@ private slots:
 private:
     void updateFormula(int variant);
     int maxRecursive(const std::vector<int>& nums);
-
-    // Итеративные версии
     long long F10Iterative(int n);
     long long F3Iterative(int n);
 
-    QLineEdit *nEdit;
-    QComboBox *variantCombo;
-    QPushButton *calcButton;
-    QLabel *resultLabel;
-    QLabel *callsLabel;
-    QLabel *formulaLabel;
-
-    QTextEdit *sequenceEdit;
-    QPushButton *maxButton;
-    QLabel *maxResultLabel;
-
-    // Новые элементы для времени и итеративного результата
-    QLabel *recTimeLabel;
-    QLabel *iterResultLabel;
-    QLabel *iterTimeLabel;
+    Ui::MainWindow *ui;
 };
 
 #endif // MAINWINDOW_H
