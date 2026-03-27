@@ -3,7 +3,7 @@
 
 #include <QMainWindow>
 #include <vector>
-#include <QtWidgets>          // включает все виджеты
+#include <QtWidgets>
 #include "ui_mainwindow.h"
 
 class MainWindow : public QMainWindow
